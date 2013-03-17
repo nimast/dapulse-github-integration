@@ -17,6 +17,26 @@ class GitPublisher < Sinatra::Base
     'Hello World!'
   end
 
+  def is_bitbucket(payload)
+    @is_bitbucket ||= /bitbucket/ =~ payload['canon_url'] 
+  end
+
+  def repository_header(payload)
+    if is_bitbucket payload
+      return "(http://bitbucket.org#{payload['repository']['absolute_url']})<br/>"
+    else
+      return "(#{payload['repository']['url']})<br/><br/>"
+    end
+  end
+
+  def commit_url(commit, payload)
+    if is_bitbucket payload
+      return "http://bitbucket.org#{payload['repository']['absolute_url']}commits/#{commit['raw_node']}"
+    else
+      return commit['url']
+    end
+  end
+
   post '/' do
     tokens = {
       'Person Name'    => '<api key>',
@@ -31,14 +51,23 @@ class GitPublisher < Sinatra::Base
 
     subject = "#{push['commits'].length} commits to #{repo_name} repo on branch #{ref}"
 
-    body = "(#{push['repository']['url']})<br/><br/>"
+    commiter_name = push['commits'].last['author']['name'] || push['commits'].last['author']
+
+    body = repository_header(push)
     push['commits'].each do |commit|
-      body = "#{body}<p>#{commit['author']['name']}: <a href='#{commit['url']}'>#{commit['message']}</a></p>"
+      commit_url = commit_url(commit, push)
+      body = "#{body}<p>#{commiter_name}: <a href='#{commit_url}'>#{commit['message']}</a></p>"
     end
-    token = tokens[push['commits'].last['author']['name']] || push['commits'].last['author']['name']
     
-    body = "#{body}<br/><p>Compare with previous version:<br/> #{push['compare']}</p>"
+    token = tokens[commiter_name]
+    unless token 
+      p "No token for user #{commiter_name}"
+      return
+    end
     
+    unless is_bitbucket push
+      body = "#{body}<br/><p>Compare with previous version:<br/> #{push['compare']}</p>"
+    end
     
     pulse_email_address = "pulse-<some-id>-#{token}@<your company slug>.dapulse.com"
     

@@ -5,4 +5,6 @@ Bundler.require
 
 require './gitpublisher'
 
+$stdout.sync = true
+
 run GitPublisher
