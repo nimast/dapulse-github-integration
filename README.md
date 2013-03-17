@@ -1,5 +1,5 @@
 ## dapulse-github-integration
-This is a sample code for a simple Sinatra service that write commit data from github into a Pulse using daPulse's Email API (http://support.dapulse.com/customer/portal/articles/784629-using-external-systems-to-email-your-pulse)
+This is a sample code for a simple Sinatra service that write commit data from github or bitbucket into a Pulse using daPulse's Email API (http://support.dapulse.com/customer/portal/articles/784629-using-external-systems-to-email-your-pulse)
 
 # Usage
 
